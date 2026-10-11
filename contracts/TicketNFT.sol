@@ -56,7 +56,110 @@ contract TicketNFT is ERC721, ERC721URIStorage, Ownable, ReentrancyGuard {
     constructor() ERC721("EventTicket", "TIX") Ownable(msg.sender) {}
 
     // ===== Person 1 =====
-    // TODO (Person 1)
+
+    /// @notice Create a new event. The caller becomes its organizer.
+    /// @dev The event name is emitted but not stored on-chain.
+    /// @param name Event name (emitted only).
+    /// @param date Event start as a unix timestamp. Must be in the future.
+    /// @param faceValue Primary sale price in wei. Must be above zero.
+    /// @param supply Number of tickets available. Must be above zero.
+    /// @param capPercent Max resale premium over face value, 0 to 100.
+    /// @param royaltyPercent Share of each resale paid to the organizer, 0 to 50.
+    /// @return eventId The id of the new event.
+    function createEvent(
+        string calldata name,
+        uint256 date,
+        uint256 faceValue,
+        uint256 supply,
+        uint8 capPercent,
+        uint8 royaltyPercent
+    ) external returns (uint256 eventId) {
+        require(date > block.timestamp, "Bad date");
+        require(faceValue > 0, "Bad face value");
+        require(supply > 0, "Bad supply");
+        require(capPercent <= 100, "Bad cap");
+        require(royaltyPercent <= 50, "Bad royalty");
+
+        eventId = nextEventId++;
+        events[eventId] = EventInfo({
+            organizer: msg.sender,
+            date: date,
+            faceValue: faceValue,
+            supply: supply,
+            sold: 0,
+            capPercent: capPercent,
+            royaltyPercent: royaltyPercent
+        });
+
+        emit EventCreated(eventId, msg.sender, name, date, faceValue, supply, capPercent, royaltyPercent);
+    }
+
+    /// @notice Buy one ticket for an event at face value.
+    /// @dev Payment is credited to the organizer's pending balance, not sent directly.
+    ///      Uses _mint (not _safeMint) so no external callback happens during the purchase.
+    /// @param eventId The event to buy a ticket for.
+    /// @param uri Metadata URI for the ticket (IPFS link).
+    /// @return ticketId The id of the minted ticket.
+    function buyTicket(uint256 eventId, string calldata uri)
+        external
+        payable
+        nonReentrant
+        returns (uint256 ticketId)
+    {
+        EventInfo storage e = events[eventId];
+        require(e.organizer != address(0), "No such event");
+        require(block.timestamp < e.date, "Event passed");
+        require(msg.value == e.faceValue, "Bad payment");
+        require(e.sold < e.supply, "Sold out");
+        require(boughtBy[eventId][msg.sender] < MAX_TICKETS_PER_WALLET, "Wallet limit reached");
+
+        // Effects first
+        e.sold += 1;
+        boughtBy[eventId][msg.sender] += 1;
+        ticketId = _nextTicketId++;
+        ticketEvent[ticketId] = eventId;
+        pending[e.organizer] += msg.value;
+
+        // Mint
+        _mint(msg.sender, ticketId);
+        _setTokenURI(ticketId, uri);
+
+        emit TicketMinted(ticketId, eventId, msg.sender, msg.value);
+    }
+
+    /// @notice Mark a ticket as used. Callable by the event organizer or an authorized venue.
+    /// @param ticketId The ticket being checked in.
+    function checkIn(uint256 ticketId) external {
+        uint256 eventId = ticketEvent[ticketId];
+        require(eventId != 0, "No such ticket");
+        require(
+            msg.sender == events[eventId].organizer || isVenue[eventId][msg.sender],
+            "Not authorized"
+        );
+        require(!used[ticketId], "Already used");
+
+        used[ticketId] = true;
+        emit CheckedIn(ticketId, msg.sender);
+    }
+
+    /// @notice Authorize a venue scanner address for an event. Organizer only.
+    /// @param eventId The event.
+    /// @param venue The scanner address to authorize.
+    function addVenue(uint256 eventId, address venue) external {
+        require(msg.sender == events[eventId].organizer, "Not authorized");
+        require(venue != address(0), "Bad venue");
+        isVenue[eventId][venue] = true;
+        emit VenueAdded(eventId, venue);
+    }
+
+    /// @notice Remove a venue scanner address from an event. Organizer only.
+    /// @param eventId The event.
+    /// @param venue The scanner address to remove.
+    function removeVenue(uint256 eventId, address venue) external {
+        require(msg.sender == events[eventId].organizer, "Not authorized");
+        isVenue[eventId][venue] = false;
+        emit VenueRemoved(eventId, venue);
+    }
 
     // ===== Person 2 =====
     /**
