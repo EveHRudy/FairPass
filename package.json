@@ -1,0 +1,40 @@
+{
+  "name": "fair_pass",
+  "version": "1.0.0",
+  "description": "Blockchain event ticketing with anti-scalping: ERC-721 tickets, capped resale prices, automatic organizer royalties, and QR entry.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EveHRudy/FairPass.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EveHRudy/FairPass/issues"
+  },
+  "homepage": "https://github.com/EveHRudy/FairPass#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "5.0.0",
+    "@openzeppelin/contracts": "5.2.0",
+    "hardhat": "2.29.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.4.5"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "es2020",
+      "moduleResolution": "node",
+      "esModuleInterop": true
+    }
+  }
+}
