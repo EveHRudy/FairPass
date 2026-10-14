@@ -2,7 +2,6 @@
 pragma solidity ^0.8.24;
 
 import "../TicketNFT.sol";
-import "./TicketNFTHarness.sol";
 
 // TEST-ONLY contract: This contract exists only for tests.
 contract ReentrancyAttacker {
@@ -22,6 +21,10 @@ contract ReentrancyAttacker {
 
     function setTargetTicket(uint256 _targetTicket) external {
         targetTicket = _targetTicket;
+    }
+
+    function buyTicketOnTarget(uint256 eventId, string calldata uri) external payable {
+        targetContract.buyTicket{value: msg.value}(eventId, uri);
     }
 
     function listTicket(uint256 ticketId, uint256 price) external {
@@ -56,10 +59,10 @@ contract ReentrancyAttacker {
 }
 
 // TEST-ONLY contract: This contract exists only for tests to verify burn restriction.
-contract BurnHarness is TicketNFTHarness {
-    function burnForTest(uint256 ticketId) external {
+contract BurnHarness is TicketNFT {
+    function burnForTest(uint256 tokenId) external {
         _marketTransfer = true;
-        _burn(ticketId);
+        _burn(tokenId);
         _marketTransfer = false;
     }
 }
