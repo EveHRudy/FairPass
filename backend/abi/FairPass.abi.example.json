@@ -1,0 +1,11 @@
+[
+  "event EventCreated(uint256 indexed eventId, address indexed organizer, string name, string venue, uint256 date, uint256 price, uint256 maxSupply)",
+  "event TicketMinted(uint256 indexed tokenId, uint256 indexed eventId, address indexed to)",
+  "event Listed(uint256 indexed tokenId, address indexed seller, uint256 price)",
+  "event Sold(uint256 indexed tokenId, address indexed seller, address indexed buyer, uint256 price)",
+  "event CheckedIn(uint256 indexed tokenId)",
+  "function ownerOf(uint256 tokenId) view returns (address)",
+  "function isCheckedIn(uint256 tokenId) view returns (bool)",
+  "function maxResaleCapPercent() view returns (uint256)",
+  "function royaltyPercent() view returns (uint256)"
+]

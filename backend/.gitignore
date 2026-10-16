@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.*.local
+data/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-*
+coverage/
+*.tsbuildinfo
