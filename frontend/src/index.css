@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #eef1f7;
+}
+
+@layer base {
+  html, body, #root { min-height: 100%; }
+  body { @apply bg-paper font-sans text-ink antialiased; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  :focus-visible { outline: 3px solid #4e3cf0; outline-offset: 2px; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply bg-brand text-white hover:bg-brand-dark; }
+  .btn-ghost { @apply border border-ink/20 bg-white hover:bg-ink/5; }
+  .btn-danger { @apply border border-bad/40 bg-white text-bad hover:bg-bad-soft; }
+  .input { @apply w-full rounded-lg border border-ink/25 bg-white px-3 py-2 text-sm; }
+  .label { @apply mb-1 block text-sm font-medium; }
+  .panel { @apply rounded-2xl border border-ink/10 bg-white p-5; }
+
+  /* Ticket stub: main part + tear-off part with notches */
+  .stub { @apply relative flex flex-col rounded-2xl border border-ink/10 bg-white; }
+  .stub-main { @apply flex-1 p-5; }
+  .stub-tail { @apply relative border-t-2 border-dashed border-ink/20 p-5; }
+  .stub-tail::before, .stub-tail::after {
+    content: ''; position: absolute; width: 20px; height: 20px;
+    border-radius: 9999px; background: var(--paper);
+  }
+  .stub-tail::before { top: -11px; left: -10px; }
+  .stub-tail::after { top: -11px; right: -10px; }
+  @media (min-width: 640px) {
+    .stub { flex-direction: row; }
+    .stub-tail { width: 14rem; flex-shrink: 0; border-top-width: 0; border-left-width: 2px; }
+    .stub-tail::before { top: -10px; left: -11px; }
+    .stub-tail::after { top: auto; bottom: -10px; right: auto; left: -11px; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
