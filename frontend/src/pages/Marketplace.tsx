@@ -69,11 +69,24 @@ export default function Marketplace() {
           ) : (
             <div className="grid gap-5">
               {listings.map((l) => {
-                const e = data.events.get(l.eventId);
+                let e = data.events.get(l.eventId);
+                if (!e && l.eventName) {
+                  e = {
+                    id: l.eventId,
+                    name: l.eventName,
+                    date: l.eventDate ?? 0,
+                    faceValue: l.faceValue ?? '0',
+                    supply: 0,
+                    sold: 0,
+                    capPercent: 0,
+                    royaltyPercent: l.royaltyPercent ?? 0,
+                    organizer: '',
+                  };
+                }
                 if (!e) return null;
                 const price = BigInt(l.price);
                 const royalty = (price * BigInt(e.royaltyPercent)) / 100n;
-                const markup = Number((price * 100n) / BigInt(e.faceValue)) - 100;
+                const markup = e.faceValue && BigInt(e.faceValue) > 0n ? Number((price * 100n) / BigInt(e.faceValue)) - 100 : 0;
                 const own = !!address && l.seller.toLowerCase() === address.toLowerCase();
                 return (
                   <Stub

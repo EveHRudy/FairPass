@@ -54,7 +54,24 @@ function Tickets({ address }: { address: string }) {
   if (!data) return null;
 
   const rows = data.tickets
-    .map((t) => ({ t, e: data.events.get(t.eventId) }))
+    .map((t) => {
+      let e = data.events.get(t.eventId);
+      if (!e && t.eventName) {
+        e = {
+          id: t.eventId,
+          name: t.eventName,
+          date: t.eventDate ?? 0,
+          venue: t.eventVenue,
+          faceValue: t.eventFaceValue ?? '0',
+          supply: 0,
+          sold: 0,
+          capPercent: 0,
+          royaltyPercent: 0,
+          organizer: '',
+        };
+      }
+      return { t, e };
+    })
     .filter((r): r is { t: Ticket; e: EventInfo } => !!r.e)
     .sort((a, b) => a.e.date - b.e.date);
 

@@ -5,6 +5,7 @@ import EventDetails from './pages/EventDetails';
 import MyTickets from './pages/MyTickets';
 import Marketplace from './pages/Marketplace';
 import Organizer from './pages/Organizer';
+import VenueScanner from './pages/VenueScanner';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -16,6 +17,8 @@ export default function App() {
         <Route path="tickets" element={<MyTickets />} />
         <Route path="marketplace" element={<Marketplace />} />
         <Route path="organizer" element={<Organizer />} />
+        <Route path="venue/scan" element={<VenueScanner />} />
+        <Route path="scan" element={<VenueScanner />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

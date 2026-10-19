@@ -112,7 +112,7 @@ function Dashboard({ address }: { address: string }) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <CreateEventForm ctx={ctx} onCreated={refresh} />
-        <VenueForm ctx={ctx} />
+        <VenueForm ctx={ctx} events={events} />
       </div>
     </div>
   );
@@ -208,19 +208,24 @@ function CreateEventForm({ ctx, onCreated }: { ctx: Web3Ctx; onCreated: () => vo
   );
 }
 
-function VenueForm({ ctx }: { ctx: Web3Ctx }) {
+function VenueForm({ ctx, events }: { ctx: Web3Ctx; events: EventInfo[] }) {
   const toast = useToast();
+  const [selectedEventId, setSelectedEventId] = useState<string>(events[0]?.id ? String(events[0].id) : '');
+  const [manualEventId, setManualEventId] = useState('');
   const [venue, setVenue] = useState('');
   const [busy, setBusy] = useState<'add' | 'remove' | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  const activeEventId = Number(selectedEventId || manualEventId);
+
   async function run(add: boolean) {
     setErr(null);
+    if (!activeEventId || activeEventId <= 0) return setErr('Select or enter an event ID.');
     if (!isAddress(venue.trim())) return setErr('Enter a valid wallet address starting with 0x.');
     setBusy(add ? 'add' : 'remove');
     try {
-      const hash = await chain.setVenue(ctx, venue.trim(), add);
-      toast.push('success', add ? 'Venue scanner added.' : 'Venue scanner removed.', hash);
+      const hash = await chain.setVenue(ctx, activeEventId, venue.trim(), add);
+      toast.push('success', add ? `Venue scanner added for event #${activeEventId}.` : `Venue scanner removed for event #${activeEventId}.`, hash);
       setVenue('');
     } catch (e) {
       setErr(parseError(e));
@@ -231,13 +236,54 @@ function VenueForm({ ctx }: { ctx: Web3Ctx }) {
 
   return (
     <div className="panel grid content-start gap-4">
-      <h2 className="text-xl font-bold">Venue scanners</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold">Venue scanners</h2>
+        <a href="/venue/scan" className="text-sm font-semibold text-brand hover:underline">
+          Open scanner &rarr;
+        </a>
+      </div>
       <p className="text-sm text-mute">
-        Addresses added here can check tickets in at the door. Remove an address when a scanner is no longer trusted.
+        Addresses added here are authorized on-chain for an event to check tickets in at the door.
       </p>
+
+      {events.length > 0 ? (
+        <div>
+          <label className="label" htmlFor="venue-event">Select event</label>
+          <select
+            id="venue-event"
+            className="input"
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
+          >
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>
+                #{ev.id} — {ev.name} ({fmtDate(ev.date)})
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        <div>
+          <label className="label" htmlFor="venue-event-id">Event ID</label>
+          <input
+            id="venue-event-id"
+            className="input"
+            placeholder="e.g. 1"
+            value={manualEventId}
+            onChange={(e) => setManualEventId(e.target.value)}
+          />
+        </div>
+      )}
+
       <div>
         <label className="label" htmlFor="venue-addr">Scanner wallet address</label>
-        <input id="venue-addr" className="input font-mono" placeholder="0x…" value={venue} onChange={(e) => setVenue(e.target.value)} />
+        <input
+          id="venue-addr"
+          className="input font-mono"
+          placeholder="0x…"
+          value={venue}
+          onChange={(e) => setVenue(e.target.value)}
+        />
       </div>
       {err && <p className="rounded-lg bg-bad-soft p-3 text-sm text-bad" role="alert">{err}</p>}
       <div className="flex gap-3">

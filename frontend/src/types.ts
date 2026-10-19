@@ -24,6 +24,10 @@ export interface Ticket {
   listed: boolean;
   listPrice?: string; // wei
   tokenURI?: string;
+  eventName?: string;
+  eventDate?: number; // unix seconds
+  eventVenue?: string;
+  eventFaceValue?: string; // wei
 }
 
 export interface Listing {
@@ -31,6 +35,10 @@ export interface Listing {
   eventId: number;
   seller: string;
   price: string; // wei
+  eventName?: string;
+  eventDate?: number; // unix seconds
+  faceValue?: string; // wei
+  royaltyPercent?: number;
 }
 
 export type TicketStatus = 'valid' | 'listed' | 'used';
@@ -40,6 +48,10 @@ export interface Challenge {
   timestamp: number; // unix seconds
   expiresAt: number; // unix seconds
   message?: string; // exact string to sign, if the backend provides it
+  challengeId?: string;
+  ticketId?: string;
+  eventId?: string;
+  holder?: string;
 }
 
 export interface Web3Ctx {

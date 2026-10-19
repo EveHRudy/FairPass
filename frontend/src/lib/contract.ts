@@ -1,29 +1,39 @@
 import { Contract, type ContractRunner } from 'ethers';
 
-// INTEGRATION (Person 1): paste the deployed Sepolia address into .env as VITE_CONTRACT_ADDRESS
-export const CONTRACT_ADDRESS: string = import.meta.env.VITE_CONTRACT_ADDRESS ?? '';
+// Deployed Sepolia contract address (Person 1)
+export const CONTRACT_ADDRESS: string =
+  import.meta.env.VITE_CONTRACT_ADDRESS ?? '0x6919957288D51D1b3A514AD2cbfF1Fb202418E5e';
 
-// INTEGRATION (Person 1): once the exported ABI file is ready, copy it to src/lib/abi/TicketNFT.json,
-// then replace the array below with:  import abi from './abi/TicketNFT.json';  export const TICKET_ABI = abi;
-// The entries below are written from the work-split PDF; function names and argument order must match the real contract.
+// ABI matching the deployed TicketNFT on Sepolia.
+// Field order and types match the on-chain struct exactly.
 export const TICKET_ABI = [
-  'function createEvent(string name, uint256 date, uint256 faceValue, uint256 supply, uint256 capPercent, uint256 royaltyPercent) returns (uint256)',
-  'function buyTicket(uint256 eventId) payable',
+  // Person 1 — event lifecycle
+  'function createEvent(string name, uint256 date, uint256 faceValue, uint256 supply, uint8 capPercent, uint8 royaltyPercent) returns (uint256)',
+  'function buyTicket(uint256 eventId, string uri) payable returns (uint256)',
   'function checkIn(uint256 ticketId)',
-  // INTEGRATION (Person 1): confirm the venue role function names
-  'function addVenue(address venue)',
-  'function removeVenue(address venue)',
+  'function addVenue(uint256 eventId, address venue)',
+  'function removeVenue(uint256 eventId, address venue)',
+
+  // Person 2 — secondary market
   'function listForResale(uint256 ticketId, uint256 price)',
   'function cancelListing(uint256 ticketId)',
   'function buyResale(uint256 ticketId) payable',
   'function withdraw()',
+  'function maxResalePrice(uint256 ticketId) view returns (uint256)',
+
+  // Read-only mappings
   'function pending(address) view returns (uint256)',
   'function used(uint256) view returns (bool)',
   'function ticketEvent(uint256) view returns (uint256)',
   'function ownerOf(uint256) view returns (address)',
   'function tokenURI(uint256) view returns (string)',
-  // INTEGRATION (Person 1 + 2): field order must match the shared EventInfo struct
-  'function events(uint256) view returns (string name, uint256 date, uint256 faceValue, uint256 supply, uint256 sold, uint256 capPercent, uint256 royaltyPercent, address organizer)',
+  'function listings(uint256) view returns (uint256)',
+  'function isVenue(uint256, address) view returns (bool)',
+  'function nextEventId() view returns (uint256)',
+
+  // Struct: (address organizer, uint256 date, uint256 faceValue, uint256 supply, uint256 sold, uint8 capPercent, uint8 royaltyPercent)
+  // Note: name is NOT stored on-chain; it is only emitted in EventCreated.
+  'function events(uint256) view returns (address organizer, uint256 date, uint256 faceValue, uint256 supply, uint256 sold, uint8 capPercent, uint8 royaltyPercent)',
 ] as const;
 
 export function getContract(runner: ContractRunner): Contract {

@@ -8,6 +8,7 @@ const links = [
   { to: '/tickets', label: 'My tickets' },
   { to: '/marketplace', label: 'Marketplace' },
   { to: '/organizer', label: 'Organizer' },
+  { to: '/venue/scan', label: 'Venue Scanner' },
 ];
 
 export default function Layout() {
@@ -31,7 +32,7 @@ export default function Layout() {
       <header className="border-b border-ink/10 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
           <NavLink to="/" className="font-display text-2xl font-bold tracking-tight">
-            Stubline
+            FairPass
           </NavLink>
           <nav className="order-last flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto" aria-label="Main">
             {links.map((l) => (

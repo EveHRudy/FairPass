@@ -24,16 +24,33 @@ export const maxResalePrice = (faceValue: string, capPercent: number): bigint =>
 
 export const ticketStatus = (t: Ticket): TicketStatus => (t.used ? 'used' : t.listed ? 'listed' : 'valid');
 
-// INTEGRATION (Person 1 + 2): replace the keys with the exact revert strings / custom errors from the contracts
+// Revert strings matching the deployed TicketNFT contract (Person 1 + 2)
 const KNOWN_REVERTS: Array<[string, string]> = [
-  ['Wrong payment', 'The amount sent does not match the ticket price.'],
+  ['Bad payment', 'The amount sent does not match the ticket price.'],
   ['Sold out', 'This event is sold out.'],
-  ['Purchase limit', 'You have reached the purchase limit for this event.'],
+  ['Wallet limit reached', 'You have reached the purchase limit (4 per wallet) for this event.'],
   ['Above cap', 'The price is above the resale cap for this event.'],
-  ['Resale locked', 'Resale is closed for this event.'],
+  ['Resale locked', 'Resale is closed for this event (within 24 hours of start).'],
   ['Ticket used', 'This ticket has already been used.'],
-  ['Transfers locked', 'Tickets can only be resold through the marketplace.'],
+  ['Use marketplace', 'Tickets can only be resold through the marketplace.'],
   ['Not owner', 'You do not own this ticket.'],
+  ['Not listed', 'This ticket is not listed for resale.'],
+  ['Own ticket', 'You cannot buy your own ticket.'],
+  ['Max resales reached', 'This ticket has reached the maximum number of resales (2).'],
+  ['Bad price', 'Listing price must be above 0.'],
+  ['Bad date', 'Event date must be in the future.'],
+  ['Bad face value', 'Ticket price must be above 0.'],
+  ['Bad supply', 'Supply must be above 0.'],
+  ['Bad cap', 'Resale cap must be between 0 and 100.'],
+  ['Bad royalty', 'Royalty must be between 0 and 50.'],
+  ['No such event', 'This event does not exist.'],
+  ['Event passed', 'This event has already ended.'],
+  ['Already used', 'This ticket has already been checked in.'],
+  ['Not authorized', 'You are not authorized to perform this action.'],
+  ['Bad venue', 'Invalid venue address.'],
+  ['Nothing to withdraw', 'You have no funds available to withdraw.'],
+  ['Withdraw failed', 'The withdrawal transaction failed.'],
+  ['Burn disabled', 'Tickets cannot be burned.'],
 ];
 
 export function parseError(e: unknown): string {

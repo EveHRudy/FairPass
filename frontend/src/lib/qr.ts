@@ -1,7 +1,10 @@
 // Builds the signed payload that goes inside the entry QR code.
-import { USE_MOCK } from './config';
-import { requestChallenge } from './api';
+import { API_URL, USE_MOCK } from './config';
+import { createCheckinQr as createCheckinQrHelper, encodeQrPayload } from './fairpassCheckin';
+import * as mock from './mock';
 import type { Web3Ctx } from '../types';
+
+export * from './fairpassCheckin';
 
 export interface EntryQR {
   payload: string;
@@ -9,19 +12,27 @@ export interface EntryQR {
 }
 
 export async function createEntryQR(ctx: Web3Ctx, ticketId: number): Promise<EntryQR> {
-  const challenge = await requestChallenge(ticketId);
-
-  // INTEGRATION (Person 5): this message must match exactly what the backend rebuilds when it recovers the signer
-  const message =
-    challenge.message ?? `Stubline entry\nticket:${ticketId}\nnonce:${challenge.nonce}\nts:${challenge.timestamp}`;
-
-  let signature = '0xmocksignature';
-  if (!USE_MOCK) {
-    if (!ctx.signer) throw new Error('Connect your wallet first.');
-    signature = await ctx.signer.signMessage(message);
+  if (USE_MOCK) {
+    const challenge = await mock.requestChallenge(ticketId);
+    const payload = encodeQrPayload({
+      v: 1,
+      challengeId: crypto.randomUUID(),
+      ticketId: String(ticketId),
+      signature: '0x' + '00'.repeat(65),
+    });
+    return { payload, expiresAt: challenge.expiresAt };
   }
 
-  // INTEGRATION (Person 5): the scanner's /checkin/verify must accept this JSON shape
-  const payload = JSON.stringify({ ticketId, nonce: challenge.nonce, timestamp: challenge.timestamp, signature });
-  return { payload, expiresAt: challenge.expiresAt };
+  if (!ctx.signer) throw new Error('Connect your wallet first.');
+
+  const res = await createCheckinQrHelper({
+    apiBase: API_URL,
+    ticketId,
+    signer: ctx.signer,
+  });
+
+  return {
+    payload: res.payload,
+    expiresAt: Math.floor(res.expiresAt.getTime() / 1000),
+  };
 }
