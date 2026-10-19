@@ -204,4 +204,12 @@ export class EthersChainReader implements ChainReader {
     this.policyCache = { at: Date.now(), value };
     return value;
   }
+  async getBalance(address: string): Promise<string> {
+    try {
+      const b = await this.provider.getBalance(getAddress(address));
+      return b.toString();
+    } catch (e) {
+      return wrap(e);
+    }
+  }
 }

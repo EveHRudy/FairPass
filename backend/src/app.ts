@@ -10,6 +10,7 @@ import type { ChainReader } from './chain/ChainReader.js';
 import { MetadataInputSchema, MetadataService } from './services/metadataService.js';
 import { CheckinService } from './services/checkinService.js';
 import { QueryServices } from './services/queryServices.js';
+import { DevService } from './services/devService.js';
 import { asyncHandler, errorHandler, limiter, notFound, validateBody } from './middleware/common.js';
 
 export interface AppDeps {
@@ -41,6 +42,7 @@ export function createApp(deps: AppDeps): Express {
   const metadata = deps.metadata ?? new MetadataService(config, db);
   const checkin = deps.checkin ?? new CheckinService(db, chain, config);
   const queries = new QueryServices(db, chain, config, metadata);
+  const dev = new DevService(config, chain);
   const app = express();
   const api = Router();
 
@@ -95,6 +97,17 @@ export function createApp(deps: AppDeps): Express {
     res.status(200).json(await checkin.confirm(req.body));
   }));
   api.get('/checkin/status/:ticketId', asyncHandler(async (req, res) => res.json(await checkin.status(uint.parse(req.params.ticketId)))));
+
+  // Development endpoints: local blockchain status & test accounts (safe: no private keys exposed)
+  api.get('/dev/chain', asyncHandler(async (_req, res) => {
+    res.json(await dev.getChainStatus());
+  }));
+  api.get('/dev/accounts', asyncHandler(async (_req, res) => {
+    res.json(await dev.getAccounts());
+  }));
+  api.get('/dev/balance/:address', asyncHandler(async (req, res) => {
+    res.json(await dev.getBalance(req.params.address));
+  }));
 
   // Canonical /api routes for the frontend and legacy aliases retained for the existing demo/tests.
   app.use('/api', api);

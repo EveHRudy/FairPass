@@ -200,3 +200,42 @@ describe('platform', () => {
     await request(app).post('/metadata').set('Content-Type', 'application/json').send('{bad').expect(400);
   });
 });
+
+describe('development endpoints', () => {
+  it('serves /dev/chain and /dev/accounts with test accounts and balances, never exposing private keys', async () => {
+    const { app } = await setup({ NODE_ENV: 'development', CHAIN_ID: '31337' });
+    const chainRes = await request(app).get('/dev/chain').expect(200);
+    expect(chainRes.body).toMatchObject({
+      connected: true,
+      chainId: 31337,
+      networkName: 'Hardhat Localhost',
+      isLocal: true,
+    });
+
+    const accsRes = await request(app).get('/dev/accounts').expect(200);
+    expect(accsRes.body.accounts).toHaveLength(5);
+    expect(accsRes.body.accounts[0]).toMatchObject({
+      index: 0,
+      label: expect.stringContaining('Deployer'),
+      address: '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
+      balanceEth: expect.any(String),
+    });
+    // Security check: privateKey must never be present
+    accsRes.body.accounts.forEach((acc: any) => {
+      expect(acc).not.toHaveProperty('privateKey');
+      expect(acc).not.toHaveProperty('secret');
+      expect(acc).not.toHaveProperty('mnemonic');
+    });
+
+    const balRes = await request(app).get('/dev/balance/0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266').expect(200);
+    expect(balRes.body.address).toBe('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
+    expect(balRes.body.balanceEth).toBeDefined();
+  });
+
+  it('disables /dev/accounts in production mode for security', async () => {
+    const { app } = await setup({ NODE_ENV: 'production' });
+    const res = await request(app).get('/dev/accounts').expect(403);
+    expect(res.body.error.code).toBe('DEV_ENDPOINT_DISABLED');
+  });
+});
+

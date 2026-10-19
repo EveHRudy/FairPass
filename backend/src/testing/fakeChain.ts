@@ -115,4 +115,5 @@ export class FakeChain implements ChainReader {
   }
   async deploymentBlock() { return null; }
   async resalePolicy() { this.maybeFail(); return this.policy; }
+  async getBalance(_address: string) { this.maybeFail(); return '10000000000000000000000'; }
 }

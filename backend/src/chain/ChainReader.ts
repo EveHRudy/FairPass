@@ -54,4 +54,6 @@ export interface ChainReader {
   deploymentBlock(): Promise<number | null>;
   /** Legacy/global policy reader retained for compatibility with earlier tests and integrations. */
   resalePolicy(): Promise<ResalePolicy>;
+  /** Query the native ETH balance in wei of any address. */
+  getBalance(address: string): Promise<string>;
 }

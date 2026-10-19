@@ -186,3 +186,48 @@ export const uploadMetadata = async (input: MetadataUploadInput): Promise<Metada
     }),
   });
 };
+
+// --------------- Development & Test Account APIs ---------------
+
+export interface DevAccount {
+  index: number;
+  label: string;
+  role: string;
+  address: string;
+  balanceWei: string;
+  balanceEth: string;
+  description: string;
+}
+
+export interface DevAccountsResponse {
+  chainId: number;
+  networkName: string;
+  isLocal: boolean;
+  accounts: DevAccount[];
+  importInstructions: string;
+}
+
+export interface ChainStatusResponse {
+  connected: boolean;
+  chainId: number;
+  networkName: string;
+  blockNumber: number | null;
+  contractAddress: string;
+  isLocal: boolean;
+  rpcUrl: string;
+  explorerUrl: string | null;
+  instructions: string | null;
+}
+
+export const getDevAccounts = async (): Promise<DevAccountsResponse> => {
+  return request<DevAccountsResponse>('/dev/accounts');
+};
+
+export const getChainStatus = async (): Promise<ChainStatusResponse> => {
+  return request<ChainStatusResponse>('/dev/chain');
+};
+
+export const getDevBalance = async (address: string): Promise<{ address: string; balanceWei: string; balanceEth: string }> => {
+  return request<{ address: string; balanceWei: string; balanceEth: string }>(`/dev/balance/${encodeURIComponent(address)}`);
+};
+

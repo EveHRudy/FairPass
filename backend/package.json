@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:chain": "node scripts/run-chain-tests.cjs",
+    "dev:accounts": "tsx ../scripts/dev-accounts.ts",
     "start:prod": "node dist/server.js"
   },
   "dependencies": {
