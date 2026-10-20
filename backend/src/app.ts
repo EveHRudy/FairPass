@@ -53,6 +53,22 @@ export function createApp(deps: AppDeps): Express {
   if (!deps.silent) app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
   app.use(limiter(300));
 
+  api.get('/', (_req, res) => {
+    res.json({
+      name: 'FairPass Backend API',
+      status: 'running',
+      chainId: config.chainId,
+      contractAddress: chain.contractAddress,
+      endpoints: {
+        health: '/api/health',
+        events: '/api/events',
+        listings: '/api/listings',
+        devChain: '/api/dev/chain',
+        devAccounts: '/api/dev/accounts',
+      },
+    });
+  });
+
   api.get('/health', asyncHandler(async (_req, res) => {
     let head: number | null = null; let chainOk = true;
     try { head = await chain.blockNumber(); } catch { chainOk = false; }

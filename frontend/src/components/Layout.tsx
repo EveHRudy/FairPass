@@ -26,15 +26,10 @@ export default function Layout() {
       )}
       {wrongNetwork && (
         <div className="flex flex-wrap items-center justify-center gap-3 bg-cap-soft px-4 py-2 text-sm font-medium text-cap" role="alert">
-          Your wallet is on an unsupported network ({networkName ?? chainId}).
-          <div className="flex items-center gap-2">
-            <button className="btn btn-primary !px-3 !py-1" onClick={() => switchNetwork(31337)}>
-              Switch to Hardhat (31337)
-            </button>
-            <button className="btn btn-secondary !px-3 !py-1" onClick={() => switchNetwork(11155111)}>
-              Switch to Sepolia (11155111)
-            </button>
-          </div>
+          Your wallet is on {networkName ?? `Chain ${chainId}`} instead of {CHAIN_NAME} ({CHAIN_ID}).
+          <button className="btn btn-primary !px-3 !py-1" onClick={() => switchNetwork(CHAIN_ID)}>
+            Switch to {CHAIN_NAME} ({CHAIN_ID})
+          </button>
         </div>
       )}
       <header className="border-b border-ink/10 bg-white">

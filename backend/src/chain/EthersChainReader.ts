@@ -7,7 +7,6 @@ import type { ChainReader, CheckinTransaction, EventInfo, RawLog, ResalePolicy }
 /** Events that exist in the deployed TicketNFT ABI. Optional events are included only if declared. */
 export const TRACKED_EVENTS = [
   'EventCreated', 'TicketMinted', 'Listed', 'ListingCancelled', 'Sold', 'CheckedIn', 'Withdrawn', 'VenueAdded', 'VenueRemoved',
-  'Cancelled', 'Delisted',
 ] as const;
 const CHECKED_IN_CANDIDATES = ['isCheckedIn', 'checkedIn', 'isUsed', 'ticketUsed', 'usedTickets', 'used', 'hasCheckedIn'];
 const CAP_CANDIDATES = ['maxResaleCapPercent', 'resaleCapPercent', 'capPercent', 'maxResalePercent', 'priceCapPercent', 'resaleCap'];

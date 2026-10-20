@@ -152,7 +152,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const networkInfo = getNetworkInfo(chainId);
   const networkName = networkInfo?.name ?? (chainId ? `Chain ${chainId}` : null);
-  const wrongNetwork = !USE_MOCK && !!address && chainId !== CHAIN_ID && chainId !== 31337 && chainId !== 11155111;
+  const wrongNetwork = !USE_MOCK && !!address && chainId !== CHAIN_ID;
 
   const value = useMemo(
     () => ({

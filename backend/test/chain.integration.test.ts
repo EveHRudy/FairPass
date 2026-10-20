@@ -34,7 +34,8 @@ describe.runIf(process.env.CHAIN_TESTS === '1')('EthersChainReader against a rea
     const args = process.platform === 'win32'
       ? ['/d', '/s', '/c', `npx hardhat node --port ${PORT}`]
       : ['hardhat', 'node', '--port', String(PORT)];
-    node = spawn(command, args, { env: { ...process.env, HARDHAT_DISABLE_TELEMETRY_PROMPT: 'true' }, stdio: 'ignore' });
+    const projectRoot = path.resolve(__dirname, '../..');
+    node = spawn(command, args, { cwd: projectRoot, env: { ...process.env, HARDHAT_DISABLE_TELEMETRY_PROMPT: 'true' }, stdio: 'ignore' });
     await waitForNode();
   }, 60_000);
   afterAll(() => { node?.kill('SIGKILL'); });
@@ -66,7 +67,7 @@ describe.runIf(process.env.CHAIN_TESTS === '1')('EthersChainReader against a rea
 
     const cfg = testConfig({ RPC_URL: RPC, CHAIN_ID: '31337', CONTRACT_ADDRESS: address, CONTRACT_ABI_PATH: abiPath });
     const reader = new EthersChainReader(cfg);
-    expect(reader.missingEvents).toEqual(['ListingCancelled', 'Withdrawn', 'VenueAdded', 'VenueRemoved', 'Cancelled', 'Delisted']);
+    expect(reader.missingEvents).toEqual(['ListingCancelled', 'Withdrawn', 'VenueAdded', 'VenueRemoved']);
     expect(await reader.ownerOf('1')).toBe(bob.address);
     expect(await reader.ownerOf('999')).toBeNull();                      // revert => "does not exist", not an outage
     expect(await reader.isCheckedIn('1')).toBe(true);

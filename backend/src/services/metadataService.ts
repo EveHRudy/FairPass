@@ -74,8 +74,20 @@ export class MetadataService {
   async upload(input: MetadataInput) {
     const metadata = buildMetadata(input);
     if (!this.cfg.pinataJwt) {
-      if (!this.cfg.metadataLocalMode) throw new HttpError(503, 'IPFS uploads are not configured (PINATA_JWT missing). Enable METADATA_LOCAL_MODE only for a local Hardhat demo.', 'PINATA_NOT_CONFIGURED');
-      if (this.cfg.chainId === 11155111) throw new HttpError(503, 'Local HTTP metadata cannot be used for a Sepolia ticket. Configure PINATA_JWT to upload permanent IPFS metadata.', 'LOCAL_METADATA_ON_SEPOLIA');
+      if (this.cfg.chainId === 11155111) {
+        throw new HttpError(
+          503,
+          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Permanent IPFS metadata is required for Sepolia. Obtain a free Pinata JWT at https://app.pinata.cloud/developers/api-keys and set PINATA_JWT in backend/.env.',
+          'PINATA_NOT_CONFIGURED',
+        );
+      }
+      if (!this.cfg.metadataLocalMode) {
+        throw new HttpError(
+          503,
+          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Set PINATA_JWT in backend/.env, or enable METADATA_LOCAL_MODE=true for local Hardhat development.',
+          'PINATA_NOT_CONFIGURED',
+        );
+      }
       const cid = `local-${randomUUID()}`;
       const uri = `${this.cfg.localMetadataBaseUrl}/local-metadata/${cid}`;
       this.db.prepare('INSERT INTO local_metadata (cid, json, created_at) VALUES (?,?,?)').run(cid, JSON.stringify(metadata), Date.now());
@@ -95,7 +107,7 @@ export class MetadataService {
       throw new HttpError(504, 'Could not reach Pinata (network error or timeout)', 'PINATA_UNREACHABLE');
     }
     if (!res.ok) {
-      if (res.status === 401 || res.status === 403) throw new HttpError(502, 'Pinata rejected the server credentials', 'PINATA_AUTH_FAILED');
+      if (res.status === 401 || res.status === 403) throw new HttpError(502, 'Pinata rejected the server credentials. Verify PINATA_JWT in backend/.env.', 'PINATA_AUTH_FAILED');
       if (res.status === 429) throw new HttpError(503, 'Pinata rate limit reached, retry shortly', 'PINATA_RATE_LIMITED');
       throw new HttpError(502, `Pinata upload failed with status ${res.status}`, 'PINATA_UPLOAD_FAILED');
     }
