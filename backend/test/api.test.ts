@@ -177,6 +177,14 @@ describe('POST /metadata', () => {
     const { app } = await setup({ CHAIN_ID: '11155111', METADATA_LOCAL_MODE: 'true' });
     await request(app).post('/api/metadata').send(body).expect(503);
   });
+  it('supports cryptographic IPFS CIDv0 computation when IPFS_FALLBACK=true', async () => {
+    const { app } = await setup({ CHAIN_ID: '11155111', IPFS_FALLBACK: 'true' });
+    const res = await request(app).post('/api/metadata').send(body).expect(201);
+    expect(res.body.cid).toMatch(/^Qm[A-Za-z0-9]{44}$/);
+    expect(res.body.uri).toBe(`ipfs://${res.body.cid}`);
+    expect(res.body.local).toBe(false);
+    expect(res.body.fallback).toBe(true);
+  });
   it('rejects invalid input', async () => {
     const { app } = await setup({ PINATA_JWT: 'x' });
     await request(app).post('/metadata').send({ ...body, eventName: '' }).expect(400);

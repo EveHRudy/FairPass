@@ -5,7 +5,11 @@ import { loadConfig } from './config.js';
 const config = loadConfig();
 
 if (config.chainId === 11155111 && !config.pinataJwt) {
-  console.warn('[config] Notice: PINATA_JWT is not set in backend/.env. IPFS uploads for Sepolia ticket purchases will require a Pinata JWT.');
+  if (config.ipfsFallback) {
+    console.log('[config] IPFS_FALLBACK=true: Cryptographic IPFS CIDv0 computation enabled for Sepolia test transactions.');
+  } else {
+    console.warn('[config] Notice: PINATA_JWT is not set in backend/.env. IPFS uploads for Sepolia ticket purchases will require a Pinata JWT or IPFS_FALLBACK=true.');
+  }
 }
 
 const { db, chain, indexer } = await buildRuntime(config);

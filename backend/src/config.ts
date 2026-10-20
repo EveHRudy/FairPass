@@ -70,6 +70,7 @@ const EnvSchema = z.object({
   VENUE_PRIVATE_KEY: z.string().optional(),
   METADATA_LOCAL_MODE: z.string().optional(),
   LOCAL_METADATA_BASE_URL: z.string().url().optional(),
+  IPFS_FALLBACK: z.string().optional(),
   INDEXER_ENABLED: z.string().optional(),
   EVENT_ARG_MAP_JSON: z.string().optional(),
   LISTING_ESCROW: z.string().optional(),
@@ -106,6 +107,7 @@ export interface AppConfig {
   venuePrivateKey?: string;
   metadataLocalMode: boolean;
   localMetadataBaseUrl: string;
+  ipfsFallback: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -158,5 +160,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     venuePrivateKey: optStr(e.VENUE_PRIVATE_KEY),
     metadataLocalMode: bool(e.METADATA_LOCAL_MODE, false),
     localMetadataBaseUrl: (optStr(e.LOCAL_METADATA_BASE_URL) ?? `http://localhost:${e.PORT}`).replace(/\/+$/, ''),
+    ipfsFallback: bool(e.IPFS_FALLBACK, false),
   };
 }

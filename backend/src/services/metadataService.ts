@@ -1,8 +1,37 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { DB } from '../db/database.js';
 import type { AppConfig } from '../config.js';
 import { HttpError } from '../errors.js';
+
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function base58Encode(buffer: Uint8Array): string {
+  const digits = [0];
+  for (let i = 0; i < buffer.length; i++) {
+    for (let j = 0; j < digits.length; j++) digits[j] <<= 8;
+    digits[0] += buffer[i];
+    let carry = 0;
+    for (let j = 0; j < digits.length; j++) {
+      digits[j] += carry;
+      carry = (digits[j] / 58) | 0;
+      digits[j] %= 58;
+    }
+    while (carry) {
+      digits.push(carry % 58);
+      carry = (carry / 58) | 0;
+    }
+  }
+  for (let i = 0; i < buffer.length && buffer[i] === 0; i++) digits.push(0);
+  return digits.reverse().map((d) => BASE58_ALPHABET[d]).join('');
+}
+
+export function computeIpfsCidV0(data: unknown): string {
+  const content = typeof data === 'string' ? Buffer.from(data, 'utf8') : Buffer.from(JSON.stringify(data));
+  const hash = createHash('sha256').update(content).digest();
+  const multihash = Buffer.concat([Buffer.from([0x12, 0x20]), hash]);
+  return base58Encode(multihash);
+}
 
 const IPFS_IMAGE = /^ipfs:\/\/[A-Za-z0-9]{46,100}(\/[\w.\-%/]*)?$/;
 const imageRef = z.string().max(500).refine((v) => {
@@ -70,21 +99,37 @@ export class MetadataService {
     ).run(String(input.eventId), input.eventName, new Date(input.date).toISOString(), input.venue, input.image ?? null, uri, Date.now());
   }
 
-  /** Uploads to Pinata, or uses an explicit local-only demo mode on non-Sepolia chains. */
+  /** Uploads to Pinata, or uses cryptographic IPFS fallback / local-only demo mode. */
   async upload(input: MetadataInput) {
     const metadata = buildMetadata(input);
     if (!this.cfg.pinataJwt) {
+      if (this.cfg.ipfsFallback) {
+        const cid = computeIpfsCidV0(metadata);
+        const uri = this.uriFor(cid);
+        this.saveEventDetails(input, uri);
+        this.db.prepare('INSERT OR REPLACE INTO metadata_cache (uri, json, fetched_at) VALUES (?,?,?)').run(uri, JSON.stringify(metadata), Date.now());
+        return {
+          cid,
+          uri,
+          ipfsUri: `ipfs://${cid}`,
+          gatewayUrl: this.gatewayUrl(cid),
+          metadata,
+          local: false,
+          fallback: true,
+          warning: 'Offline IPFS mode: metadata cached locally in FairPass SQLite. Configure PINATA_JWT for global Pinata gateway pinning.',
+        };
+      }
       if (this.cfg.chainId === 11155111) {
         throw new HttpError(
           503,
-          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Permanent IPFS metadata is required for Sepolia. Obtain a free Pinata JWT at https://app.pinata.cloud/developers/api-keys and set PINATA_JWT in backend/.env.',
+          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Permanent IPFS metadata is required for Sepolia. Obtain a free Pinata JWT at https://app.pinata.cloud/developers/api-keys and set PINATA_JWT in backend/.env, or set IPFS_FALLBACK=true in backend/.env for testing without Pinata.',
           'PINATA_NOT_CONFIGURED',
         );
       }
       if (!this.cfg.metadataLocalMode) {
         throw new HttpError(
           503,
-          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Set PINATA_JWT in backend/.env, or enable METADATA_LOCAL_MODE=true for local Hardhat development.',
+          'IPFS uploads are not configured (PINATA_JWT missing in backend/.env). Set PINATA_JWT in backend/.env, enable IPFS_FALLBACK=true, or set METADATA_LOCAL_MODE=true for local Hardhat development.',
           'PINATA_NOT_CONFIGURED',
         );
       }
